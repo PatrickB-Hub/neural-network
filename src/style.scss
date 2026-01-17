@@ -206,6 +206,22 @@ kbd {
   }
 }
 
+.toolbar {
+  top: $gap;
+  right: $gap;
+  display: flex;
+  gap: 8px;
+
+  @include mobile {
+    order: -1;
+  }
+}
+
+body.mode-training .inference-only,
+body.mode-inference .training-only {
+  display: none;
+}
+
 // panels
 .panel {
   @include glass;
@@ -246,6 +262,236 @@ kbd {
   from {
     opacity: 0;
     transform: translateY(8px);
+  }
+}
+
+// buttons & inputs
+.btn {
+  font: inherit;
+  font-weight: 600;
+  color: $ink;
+  background: $accent-tint;
+  border: 1px solid $line;
+  border-radius: 9px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
+
+  &:hover:not(:disabled) {
+    background: rgba(143, 180, 255, 0.2);
+    border-color: rgba(143, 180, 255, 0.35);
+  }
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.primary {
+    background: linear-gradient(180deg, #7fb0ff, #4d8dff);
+    border-color: transparent;
+    color: $on-accent;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(180deg, #92bdff, #5f99ff);
+    }
+  }
+
+  // icon + label
+  &.with-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    line-height: 1.2;
+    text-align: left;
+  }
+
+  .btn-icon {
+    flex: none;
+    width: 1em;
+    font-size: 0.85em;
+    text-align: center;
+
+    &[data-icon="play"] {
+      font-size: 1.15em;
+    }
+  }
+
+  &.ghost {
+    background: transparent;
+  }
+  &.wide {
+    width: 100%;
+    margin-top: 12px;
+  }
+  &.chip {
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+}
+
+.btn:focus-visible,
+input:focus-visible {
+  outline: 2px solid $accent;
+  outline-offset: 2px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.field {
+  margin-top: 14px;
+
+  .hint {
+    margin-top: 4px;
+  }
+}
+
+.field-head {
+  display: flex;
+  justify-content: space-between;
+  color: $ink-2;
+  font-weight: 500;
+
+  output {
+    font-family: $mono;
+    color: $ink;
+  }
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: $accent;
+  margin: 8px 0 0;
+}
+
+.switch {
+  @include glass(10px);
+  @include pill;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 12px 6px 8px;
+  color: $ink-2;
+
+  input {
+    appearance: none;
+    position: relative;
+    width: 26px;
+    height: 15px;
+    margin: 0;
+    @include pill;
+    background: rgba(143, 180, 255, 0.2);
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: $ink;
+      transition: transform 0.2s;
+    }
+
+    &:checked {
+      background: $accent;
+    }
+    &:checked::after {
+      transform: translateX(11px);
+    }
+  }
+}
+
+// stats
+.stat {
+  margin-bottom: 12px;
+}
+
+.stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: $ink-2;
+
+  small {
+    color: $muted;
+  }
+  b {
+    font: 600 17px $mono;
+    color: $ink;
+  }
+}
+
+.progress {
+  height: 5px;
+  margin-top: 6px;
+  @include pill;
+  background: rgba(143, 180, 255, 0.12);
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: $accent;
+    @include pill;
+    transition: width 0.3s;
+  }
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-top: 4px;
+  cursor: crosshair;
+}
+.spark-readout {
+  display: block;
+  height: 14px;
+  color: $muted;
+  font: 11px $mono;
+}
+
+.sample {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid $line;
+  padding-top: 10px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    color: $ink-2;
+  }
+  b {
+    color: $ink;
+    font-weight: 600;
+  }
+  i {
+    font-style: normal;
+  }
+}
+
+#sample-guess {
+  &.ok {
+    color: map.get($colors, "hidden");
+  }
+  &.bad {
+    color: map.get($colors, "output");
   }
 }
 

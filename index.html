@@ -33,6 +33,48 @@
         </p>
       </header>
 
+      <div class="toolbar">
+        <label class="switch"
+          ><input type="checkbox" id="toggle-labels" checked /><span>Beschriftungen</span></label
+        >
+        <label class="switch"
+          ><input type="checkbox" id="toggle-formulas" checked /><span>Formeln</span></label
+        >
+      </div>
+
+      <!-- UIControls (training mode) -->
+      <aside class="panel left training-only" id="controls">
+        <h2>Training</h2>
+        <div class="btn-row">
+          <button id="btn-play" class="btn primary grow with-icon" aria-pressed="false">
+            <span class="btn-icon" data-icon="play" aria-hidden="true">▶</span>
+            <span class="btn-label">Training starten</span>
+          </button>
+          <button id="btn-step" class="btn" title="Zur nächsten Phase springen (→)">Schritt ⏭</button>
+          <button
+            id="btn-reset"
+            class="btn"
+            title="Neu starten mit zufälligen Gewichten"
+            aria-label="Zurücksetzen"
+          >
+            ↺
+          </button>
+        </div>
+        <div class="field">
+          <label class="field-head" for="speed"
+            ><span>Geschwindigkeit</span><output id="speed-label"></output
+          ></label>
+          <input type="range" id="speed" min="0" max="6" step="1" />
+          <p class="hint" id="speed-hint"></p>
+        </div>
+        <button id="btn-skip" class="btn ghost wide">Training beenden</button>
+        <p class="hint">
+          Ziehen zum Drehen · Scrollen zum Zoomen · Rechtsklick-Ziehen zum Verschieben · Maus über Elemente
+          für Details. Tasten:
+          <kbd>Leertaste</kbd> Start/Pause, <kbd>→</kbd> Schritt.
+        </p>
+      </aside>
+
       <section class="panel formulas" id="formulas" aria-label="Formeln">
         <h2>Die Mathematik in Kürze</h2>
         <dl>
@@ -68,6 +110,35 @@
           </div>
         </dl>
       </section>
+
+      <!-- StatsPanel (training mode) -->
+      <aside class="panel right training-only" id="stats">
+        <h2>Fortschritt</h2>
+        <div class="stat">
+          <div class="stat-head"><span>Epoch</span><b id="stat-epoch">0 / 5</b></div>
+          <div class="progress"><span id="epoch-bar"></span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-head">
+            <span>Genauigkeit <small>(Validierung)</small></span
+            ><b id="stat-acc">—</b>
+          </div>
+          <canvas class="spark" id="spark-acc" aria-label="Genauigkeit im Verlauf"></canvas>
+          <small class="spark-readout" id="spark-acc-readout"></small>
+        </div>
+        <div class="stat">
+          <div class="stat-head">
+            <span>Verlust <small>(kleiner ist besser)</small></span
+            ><b id="stat-loss">—</b>
+          </div>
+          <canvas class="spark" id="spark-loss" aria-label="Verlust im Verlauf"></canvas>
+          <small class="spark-readout" id="spark-loss-readout"></small>
+        </div>
+        <div class="sample">
+          <div><span>Aktuelles Beispiel</span><b id="sample-label">—</b></div>
+          <div><span>Tipp des Netzes</span><b id="sample-guess">—</b></div>
+        </div>
+      </aside>
 
       <div class="panel legend" aria-label="Legende">
         <span><i class="dot" style="--c: var(--input)"></i>Input</span>

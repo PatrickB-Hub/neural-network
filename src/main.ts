@@ -7,6 +7,8 @@ import { NeuralNetworkModel } from "./NeuralNetworkModel.ts";
 import { makeDataset, makeRng, GRID, CLASSES, CLASS_ICONS, num, pct } from "./shapes.ts";
 import { TrainingController, PHASES, type CycleContext, type PhaseId } from "./TrainingController.ts";
 import { NetworkScene } from "./Scene.ts";
+import { UIControls } from "./UIControls.ts";
+import { StatsPanel } from "./StatsPanel.ts";
 import { $ } from "./dom.ts";
 
 const BATCH_SIZE = 8;
@@ -18,6 +20,12 @@ const valSet = makeDataset(30, rng); // 90 held-out drawings → accuracy
 const model = new NeuralNetworkModel([GRID * GRID, 16, 10, 3]);
 
 const scene = new NetworkScene($("stage"), model, $("tooltip"));
+const stats = new StatsPanel();
+
+function clearScene(): void {
+  scene.clearActivity({ immediate: true });
+  scene.clearDrawing();
+}
 
 // captions, step indicator, formulas
 type StepId = "input" | "forward" | "output" | "loss" | "backprop" | "update";
@@ -95,6 +103,22 @@ function trainingCaption(id: PhaseId, ctx: CycleContext): string {
 }
 
 // training
+const controls = new UIControls(BATCH_SIZE, {
+  play: () => controller.play(),
+  pause: () => controller.pause(),
+  step: () => controller.step(),
+  reset: () => resetTraining(),
+  skip: () => controller.finishNow(),
+  speed: (i) => controller.setSpeed(i),
+  toggleLabels: (on) => {
+    scene.setLabelsVisible(on);
+    document.body.classList.toggle("no-labels", !on);
+  },
+  toggleFormulas: (on) => {
+    $("formulas").hidden = !on;
+  },
+});
+
 const controller = new TrainingController(model, trainSet, valSet, {
   batchSize: BATCH_SIZE,
   targetEpochs: 5,
@@ -103,9 +127,11 @@ const controller = new TrainingController(model, trainSet, valSet, {
       const duration = PHASES.find((p) => p.id === id)!.duration;
       if (id === "input") {
         scene.showInput(ctx.sample.strokes, ctx.sample.extent, ctx.sample.x, duration);
+        stats.showSample(ctx.sample);
       } else if (id.startsWith("forward")) {
         const layer = Number(id.slice(-1)) - 1;
         scene.forward(layer, ctx.pass, duration);
+        if (layer === 2) stats.showGuess(ctx.sample, ctx.pass.probs, ctx.predicted);
       } else if (id === "loss") {
         scene.setRings({ target: ctx.sample.y, winner: ctx.predicted });
       } else if (id === "backprop") {
@@ -117,6 +143,9 @@ const controller = new TrainingController(model, trainSet, valSet, {
       }
       setCaption(STEP_OF[id], trainingCaption(id, ctx), FORMULA_OF[id]);
     },
+    onStats: (values, history) => stats.update(values, history),
+    onState: (ctrl) =>
+      controls.setState({ running: ctrl.running, started: ctrl.phaseIndex >= 0, finished: ctrl.finished }),
     onComplete: () => {
       scene.setWeights(model, true);
       setCaption(
@@ -127,10 +156,26 @@ const controller = new TrainingController(model, trainSet, valSet, {
     },
   },
 });
+controls.showSpeed(controller.speedIndex);
+
+function idleCaption(): void {
+  setCaption(
+    null,
+    "Klicke auf <b>Training starten</b> und sieh zu, wie das Netz aus Beispielzeichnungen lernt. Fahre mit der Maus über ein Neuron, eine Linie oder einen Bias-Knoten, um zu sehen, was es tut.",
+    null,
+  );
+}
+
+function resetTraining(): void {
+  controller.reset();
+  scene.setWeights(model, false);
+  clearScene();
+  idleCaption();
+}
 
 // main render loop
 renderSteps(TRAIN_STEPS);
-controller.play();
+idleCaption();
 
 let last = performance.now();
 function frame(now: number): void {
