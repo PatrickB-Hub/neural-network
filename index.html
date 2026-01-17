@@ -33,6 +33,42 @@
         </p>
       </header>
 
+      <section class="panel formulas" id="formulas" aria-label="Formeln">
+        <h2>Die Mathematik in Kürze</h2>
+        <dl>
+          <div data-f="x">
+            <dt>Eingabe</dt>
+            <dd><var>x</var> ∈ [0, 1] &nbsp;<small>Pixel</small></dd>
+          </div>
+          <div data-f="z softmax">
+            <dt>Neuron</dt>
+            <dd><var>z</var> = <var>w</var>·<var>x</var> + <var>b</var></dd>
+          </div>
+          <div data-f="z">
+            <dt>Aktivierung</dt>
+            <dd><var>a</var> = ReLU(<var>z</var>) = max(0, <var>z</var>)</dd>
+          </div>
+          <div data-f="softmax">
+            <dt>Ausgabe</dt>
+            <dd><var>p</var> = softmax(<var>z</var>) &nbsp;<small>Σ = 100 %</small></dd>
+          </div>
+          <div data-f="loss">
+            <dt>Verlust</dt>
+            <dd><var>L</var> = −log <var>p</var><sub>correct</sub></dd>
+          </div>
+          <div data-f="grad">
+            <dt>Backprop</dt>
+            <dd>
+              ∂<var>L</var>/∂<var>w</var> = <var>δ</var> · <var>a</var> &nbsp;<small>Kettenregel</small>
+            </dd>
+          </div>
+          <div data-f="update">
+            <dt>Anpassung</dt>
+            <dd><var>w</var> ← <var>w</var> − <var>η</var>·∂<var>L</var>/∂<var>w</var></dd>
+          </div>
+        </dl>
+      </section>
+
       <div class="panel legend" aria-label="Legende">
         <span><i class="dot" style="--c: var(--input)"></i>Input</span>
         <span><i class="dot" style="--c: var(--hidden)"></i>Hidden Layer</span>
@@ -46,6 +82,11 @@
           by <a href="https://patrickbecker.work" target="_blank" rel="noopener">Patrick Becker</a>
         </span>
       </div>
+
+      <footer class="caption" aria-live="polite">
+        <ol id="steps"></ol>
+        <p id="caption-text"></p>
+      </footer>
     </div>
 
     <script type="module" src="/src/main.ts"></script>
