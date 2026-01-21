@@ -6,7 +6,7 @@
     <title>3D Neuronales Netz</title>
     <meta
       name="description"
-      content="Interaktive 3D-Demo: Sieh zu, wie ein neuronales Netz lernt, handgezeichnete Dreiecke, Rechtecke und Kreise zu erkennen."
+      content="Interaktive 3D-Demo: Sieh zu, wie ein neuronales Netz lernt, handgezeichnete Dreiecke, Rechtecke und Kreise zu erkennen – und zeichne dann selbst."
     />
     <link
       rel="icon"
@@ -29,7 +29,7 @@
         <p>
           Sieh zu, wie es mit <span class="c-input">▲</span>
           <span class="c-hidden">■</span>
-          <span class="c-output">●</span>-Zeichnungen trainiert.
+          <span class="c-output">●</span>-Zeichnungen trainiert – und zeichne dann selbst.
         </p>
       </header>
 
@@ -67,12 +67,37 @@
           <input type="range" id="speed" min="0" max="6" step="1" />
           <p class="hint" id="speed-hint"></p>
         </div>
-        <button id="btn-skip" class="btn ghost wide">Training beenden</button>
+        <button id="btn-skip" class="btn ghost wide">Training beenden &amp; zeichnen</button>
         <p class="hint">
           Ziehen zum Drehen · Scrollen zum Zoomen · Rechtsklick-Ziehen zum Verschieben · Maus über Elemente
           für Details. Tasten:
           <kbd>Leertaste</kbd> Start/Pause, <kbd>→</kbd> Schritt.
         </p>
+      </aside>
+
+      <!-- DrawingCanvas (inference mode) -->
+      <aside class="panel left inference-only" id="draw-panel">
+        <h2>Form zeichnen</h2>
+        <canvas id="pad" aria-label="Zeichenfläche: Zeichne ein Dreieck, Rechteck oder einen Kreis"></canvas>
+        <div class="btn-row">
+          <button id="btn-predict" class="btn primary grow" disabled>Erkennen</button>
+          <button id="btn-clear" class="btn">Löschen</button>
+        </div>
+        <div class="examples">
+          <span>Beispiel ausprobieren</span>
+          <button class="btn chip" data-example="0" aria-label="Beispiel Dreieck">▲</button>
+          <button class="btn chip" data-example="1" aria-label="Beispiel Rechteck">■</button>
+          <button class="btn chip" data-example="2" aria-label="Beispiel Kreis">●</button>
+        </div>
+        <div class="preview">
+          <canvas
+            id="pixels"
+            width="100"
+            height="100"
+            aria-label="Vorschau der Eingabe, 10 mal 10 Pixel"
+          ></canvas>
+          <p><b>Was das Netz sieht</b>Zugeschnitten und auf 10×10 Pixel verkleinert = 100 Zahlen.</p>
+        </div>
       </aside>
 
       <section class="panel formulas" id="formulas" aria-label="Formeln">
@@ -138,6 +163,16 @@
           <div><span>Aktuelles Beispiel</span><b id="sample-label">—</b></div>
           <div><span>Tipp des Netzes</span><b id="sample-guess">—</b></div>
         </div>
+      </aside>
+
+      <!-- PredictionPanel (inference mode) -->
+      <aside class="panel right inference-only" id="prediction">
+        <h2>Vorhersage</h2>
+        <div id="pred-result" class="pred-result"></div>
+        <div id="pred-bars" class="bars"></div>
+        <p id="pred-explain" class="explain"></p>
+        <p id="pred-model" class="hint"></p>
+        <button id="btn-retrain" class="btn ghost wide">↺ Neu trainieren</button>
       </aside>
 
       <div class="panel legend" aria-label="Legende">

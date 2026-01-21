@@ -1,14 +1,28 @@
 /**
- *  TrainingController steps through phases; each phase triggers a scene
- *  animation, a caption and a highlighted formula.
+ *  training:  TrainingController steps through phases; each phase triggers a scene
+ *             animation, a caption and a highlighted formula.
+ *  inference: the user draws, presses Predict, and the same forward animation runs
+ *             on their drawing with the trained weights.
  */
 import "./style.scss";
-import { NeuralNetworkModel } from "./NeuralNetworkModel.ts";
-import { makeDataset, makeRng, GRID, CLASSES, CLASS_ICONS, num, pct } from "./shapes.ts";
+import { NeuralNetworkModel, argmax } from "./NeuralNetworkModel.ts";
+import {
+  makeDataset,
+  makeRng,
+  featurize,
+  generateShape,
+  GRID,
+  CLASSES,
+  CLASS_ICONS,
+  num,
+  pct,
+} from "./shapes.ts";
 import { TrainingController, PHASES, type CycleContext, type PhaseId } from "./TrainingController.ts";
-import { NetworkScene } from "./Scene.ts";
+import { NetworkScene, type Mode } from "./Scene.ts";
+import { DrawingCanvas, drawPixels } from "./DrawingCanvas.ts";
 import { UIControls } from "./UIControls.ts";
 import { StatsPanel } from "./StatsPanel.ts";
+import { PredictionPanel } from "./PredictionPanel.ts";
 import { $ } from "./dom.ts";
 
 const BATCH_SIZE = 8;
@@ -21,6 +35,8 @@ const model = new NeuralNetworkModel([GRID * GRID, 16, 10, 3]);
 
 const scene = new NetworkScene($("stage"), model, $("tooltip"));
 const stats = new StatsPanel();
+const prediction = new PredictionPanel();
+let mode: Mode = "training";
 
 function clearScene(): void {
   scene.clearActivity({ immediate: true });
@@ -28,7 +44,7 @@ function clearScene(): void {
 }
 
 // captions, step indicator, formulas
-type StepId = "input" | "forward" | "output" | "loss" | "backprop" | "update";
+type StepId = "input" | "forward" | "output" | "loss" | "backprop" | "update" | "prediction";
 type FormulaId = "x" | "z" | "softmax" | "loss" | "grad" | "update";
 
 const TRAIN_STEPS: [StepId, string][] = [
@@ -38,6 +54,12 @@ const TRAIN_STEPS: [StepId, string][] = [
   ["loss", "Verlust"],
   ["backprop", "Backprop"],
   ["update", "Anpassung"],
+];
+const INFER_STEPS: [StepId, string][] = [
+  ["input", "Eingabe"],
+  ["forward", "Vorwärts"],
+  ["output", "Ausgabe"],
+  ["prediction", "Vorhersage"],
 ];
 const STEP_OF: Record<PhaseId, StepId> = {
   input: "input",
@@ -153,6 +175,7 @@ const controller = new TrainingController(model, trainSet, valSet, {
         "<b>Training abgeschlossen!</b> Die Gewichte sind jetzt so eingestellt, dass das Netz Dreiecke, Rechtecke und Kreise unterscheiden kann.",
         "update",
       );
+      setTimeout(enterInference, 1400);
     },
   },
 });
@@ -173,9 +196,101 @@ function resetTraining(): void {
   idleCaption();
 }
 
+// inference
+const drawing = new DrawingCanvas($<HTMLCanvasElement>("pad"), {
+  onChange(strokes) {
+    const pixels = featurize(strokes);
+    drawPixels($<HTMLCanvasElement>("pixels"), pixels, GRID);
+    $<HTMLButtonElement>("btn-predict").disabled = strokes.length === 0;
+  },
+});
+
+function enterInference(): void {
+  if (mode === "inference") return;
+  mode = "inference";
+  controller.pause();
+  document.body.classList.replace("mode-training", "mode-inference");
+  scene.setMode("inference");
+  clearScene();
+  prediction.setModelInfo(controller.stats.accuracy);
+  prediction.setWaiting();
+  renderSteps(INFER_STEPS);
+  setCaption(
+    null,
+    "<b>Du bist dran.</b> Zeichne ein Dreieck, Rechteck oder einen Kreis und klicke auf <b>Erkennen</b>, um dem Netz beim Denken zuzusehen.",
+    null,
+  );
+  drawing.resize(); // pad is visible
+}
+
+function leaveInference(): void {
+  mode = "training";
+  document.body.classList.replace("mode-inference", "mode-training");
+  scene.setMode("training");
+  renderSteps(TRAIN_STEPS);
+  drawing.clear();
+  resetTraining();
+}
+
+/** Run the drawing through the trained network with the full forward animation */
+function predict(): void {
+  if (!drawing.strokes.length) return;
+  const pixels = featurize(drawing.strokes);
+  const pass = model.forward(pixels);
+  const winner = argmax(pass.probs);
+  $<HTMLButtonElement>("btn-predict").disabled = true;
+  prediction.setThinking();
+  scene.clearActivity({ immediate: true });
+  scene.showInput(drawing.strokes, drawing.size, pixels, 1.0);
+  setCaption(
+    "input",
+    "<b>Eingabe.</b> Deine Zeichnung wird zugeschnitten, gestreckt und auf 10×10 Pixel verkleinert – 100 Zahlen fließen in die Eingabeschicht.",
+    "x",
+  );
+  scene.schedule(1.0, () => {
+    scene.forward(0, pass, 0.9);
+    setCaption(
+      "forward",
+      "<b>Vorwärtsdurchlauf.</b> Jedes verborgene Neuron berechnet <code>z = w·x + b</code> und danach <code>ReLU</code>. Hellere Neuronen reagieren stärker auf deine Zeichnung.",
+      "z",
+    );
+  });
+  scene.schedule(1.9, () => scene.forward(1, pass, 0.7));
+  scene.schedule(2.6, () => {
+    scene.forward(2, pass, 0.8);
+    setCaption(
+      "output",
+      `<b>Ausgabe.</b> Softmax macht aus den Werten Wahrscheinlichkeiten: &nbsp;${probsLine(pass.probs)}`,
+      "softmax",
+    );
+  });
+  scene.schedule(3.4, () => {
+    scene.setRings({ winner });
+    prediction.show(pass.probs);
+    setCaption(
+      "prediction",
+      `<b>Vorhersage: ${CLASS_ICONS[winner]} ${CLASSES[winner]}</b> – höchste Aktivierung im Ausgabeneuron „${CLASSES[winner]}“ (${pct(pass.probs[winner])}).`,
+      "softmax",
+    );
+    $<HTMLButtonElement>("btn-predict").disabled = false;
+  });
+}
+
+$("btn-predict").addEventListener("click", predict);
+$("btn-clear").addEventListener("click", () => {
+  drawing.clear();
+  clearScene();
+  prediction.setWaiting();
+});
+$("btn-retrain").addEventListener("click", leaveInference);
+document.querySelectorAll<HTMLElement>("[data-example]").forEach((btn) => {
+  btn.addEventListener("click", () => drawing.setStrokes(generateShape(Number(btn.dataset.example)), 100));
+});
+
 // main render loop
 renderSteps(TRAIN_STEPS);
 idleCaption();
+drawPixels($<HTMLCanvasElement>("pixels"), new Float32Array(GRID * GRID), GRID);
 
 let last = performance.now();
 function frame(now: number): void {
@@ -183,7 +298,7 @@ function frame(now: number): void {
   last = now;
   // Sim time follows the training clock
   let simDt = controller.update(dt);
-  if (controller.finished) simDt = dt;
+  if (mode === "inference" || controller.finished) simDt = dt;
   scene.update(dt, simDt);
   requestAnimationFrame(frame);
 }

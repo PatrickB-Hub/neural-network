@@ -495,6 +495,126 @@ input[type="range"] {
   }
 }
 
+// drawing & prediction
+#pad {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(143, 180, 255, 0.3);
+  background: radial-gradient(circle at 50% 40%, #121c38, #0a1124);
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.examples {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: $muted;
+
+  span {
+    flex: 1;
+  }
+}
+
+.preview {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  border-top: 1px solid $line;
+  padding-top: 12px;
+
+  canvas {
+    width: 72px;
+    height: 72px;
+    image-rendering: pixelated;
+    border-radius: 6px;
+    flex: none;
+  }
+  p {
+    margin: 0;
+    color: $muted;
+    font-size: 12px;
+  }
+  b {
+    display: block;
+    color: $ink-2;
+  }
+}
+
+.pred-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+
+  b {
+    font-size: 24px;
+  }
+}
+
+.pred-icon {
+  font-size: 34px;
+  color: map.get($colors, "output");
+  text-shadow: 0 0 18px rgba(255, 92, 138, 0.6);
+}
+
+.bars {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 46px;
+  align-items: center;
+  gap: 8px;
+  color: $ink-2;
+
+  i {
+    font-style: normal;
+    margin-right: 6px;
+  }
+
+  &.win {
+    color: $ink;
+    font-weight: 600;
+
+    .bar-fill {
+      background: map.get($colors, "output");
+      box-shadow: 0 0 10px rgba(255, 92, 138, 0.6);
+    }
+  }
+}
+
+.bar-track {
+  height: 8px;
+  background: $accent-tint;
+  @include pill;
+  overflow: hidden;
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: rgba(255, 92, 138, 0.45);
+  @include pill;
+  transition: width 0.6s $ease-out;
+}
+.bar-val {
+  text-align: right;
+  font-family: $mono;
+}
+.explain {
+  margin: 0;
+  color: $ink-2;
+}
+
 // formulas
 .formulas {
   left: $gap;
