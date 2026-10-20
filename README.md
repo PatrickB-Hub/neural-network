@@ -4,6 +4,8 @@ An interactive 3D demo of a small neural network learning to recognise hand-draw
 **triangles, rectangles and circles**. Watch it train (forward pass, loss, backpropagation,
 weight updates), then draw your own shape and watch the network predict it.
 
+**Live:** [neural-network.patrickbecker.work](https://neural-network.patrickbecker.work)
+
 ```bash
 npm install
 npm run dev     # http://localhost:5173
