@@ -1,4 +1,4 @@
-# Shape Network 3D
+# Neural Network
 
 An interactive 3D demo of a small neural network learning to recognise hand-drawn
 **triangles, rectangles and circles**. Watch it train (forward pass, loss, backpropagation,
